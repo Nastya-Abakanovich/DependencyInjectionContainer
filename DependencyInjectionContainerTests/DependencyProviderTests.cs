@@ -107,7 +107,7 @@ namespace DependencyInjectionContainerTests
         }
 
         [Test]
-        public void Resolve_TemplateTypeGenerics_RequiredTypeObject()
+        public void Resolve_OpenGeneric_Generics()
         {
             DependenciesConfiguration configuration = new DependenciesConfiguration();
             configuration.Register<IRepository, RepositoryImpl>();
@@ -120,7 +120,7 @@ namespace DependencyInjectionContainerTests
         }
 
         [Test]
-        public void Resolve_TemplateType2Typeof_RequiredTypeObject()
+        public void Resolve_OpenGeneric_Typeof()
         {
             DependenciesConfiguration configuration = new DependenciesConfiguration();
             configuration.Register<IRepository, RepositoryImpl>();

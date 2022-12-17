@@ -17,14 +17,26 @@ namespace DependencyInjectionContainerTests
         }
 
         [Test]
-        public void Register_Singleton_SuccessfulRegistration()
+        public void Register_AbstructImplementation_SuccessfulRegistration()
         {
             DependenciesConfiguration configuration = new DependenciesConfiguration();
-            configuration.Register(typeof(IService), typeof(ServiceImplInt), LifeTime.Singleton);
+            configuration.Register(typeof(AbstractService), typeof(ServiceImplAbstr));
 
-            ImplementationInfo actual = configuration.RegisteredDependencies[typeof(IService)][0];
+            ImplementationInfo actual = configuration.RegisteredDependencies[typeof(AbstractService)][0];
 
-            Assert.AreEqual(LifeTime.Singleton, actual.LifeTime, "LifeTimes are not equal.");
+            Assert.AreEqual(LifeTime.InstancePerDependency, actual.LifeTime, "LifeTimes are not equal.");
+            Assert.AreEqual(typeof(ServiceImplAbstr), actual.ImplClassType, "ImplClassType are not equal.");
+        }
+
+        [Test]
+        public void Register_AsSelfRegistration_SuccessfulRegistration()
+        {
+            DependenciesConfiguration configuration = new DependenciesConfiguration();
+            configuration.Register(typeof(ServiceImplInt), typeof(ServiceImplInt));
+
+            ImplementationInfo actual = configuration.RegisteredDependencies[typeof(ServiceImplInt)][0];
+
+            Assert.AreEqual(LifeTime.InstancePerDependency, actual.LifeTime, "LifeTimes are not equal.");
             Assert.AreEqual(typeof(ServiceImplInt), actual.ImplClassType, "ImplClassType are not equal.");
         }
 
@@ -41,27 +53,15 @@ namespace DependencyInjectionContainerTests
         }
 
         [Test]
-        public void Register_SameClassRegistration_SuccessfulRegistration()
+        public void Register_Singleton_SuccessfulRegistration()
         {
             DependenciesConfiguration configuration = new DependenciesConfiguration();
-            configuration.Register<ServiceImplInt, ServiceImplInt>();
+            configuration.Register(typeof(IService), typeof(ServiceImplInt), LifeTime.Singleton);
 
-            ImplementationInfo actual = configuration.RegisteredDependencies[typeof(ServiceImplInt)][0];
+            ImplementationInfo actual = configuration.RegisteredDependencies[typeof(IService)][0];
 
-            Assert.AreEqual(LifeTime.InstancePerDependency, actual.LifeTime, "LifeTimes are not equal.");
+            Assert.AreEqual(LifeTime.Singleton, actual.LifeTime, "LifeTimes are not equal.");
             Assert.AreEqual(typeof(ServiceImplInt), actual.ImplClassType, "ImplClassType are not equal.");
-        }
-
-        [Test]
-        public void Register_AbstructImplementation_SuccessfulRegistration()
-        {
-            DependenciesConfiguration configuration = new DependenciesConfiguration();
-            configuration.Register(typeof(AbstractService), typeof(ServiceImplAbstr));
-
-            ImplementationInfo actual = configuration.RegisteredDependencies[typeof(AbstractService)][0];
-
-            Assert.AreEqual(LifeTime.InstancePerDependency, actual.LifeTime, "LifeTimes are not equal.");
-            Assert.AreEqual(typeof(ServiceImplAbstr), actual.ImplClassType, "ImplClassType are not equal.");
         }
 
         [Test]
