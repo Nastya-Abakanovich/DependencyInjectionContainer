@@ -7,14 +7,15 @@ namespace DependencyInjectionContainerLibrary
     {
         private readonly DependenciesConfiguration _configuration;
 
-        private readonly ConcurrentDictionary<Type, object> _singletonImplementations =
-            new ConcurrentDictionary<Type, object>();
+        private readonly ConcurrentDictionary<Type, object> _singletonImplementations;
 
-        private readonly Stack<Type> _recursionStack = new Stack<Type>();
+        private readonly Stack<Type> _recursionStack;
 
         public DependencyProvider(DependenciesConfiguration configuration)
         {
             _configuration = configuration;
+            _singletonImplementations = new ConcurrentDictionary<Type, object>();
+            _recursionStack = new Stack<Type>();
         }
 
         public TDependency Resolve<TDependency>()
@@ -23,14 +24,14 @@ namespace DependencyInjectionContainerLibrary
         }
 
         private object Resolve(Type dependencyType)
-        {
-            
+        {            
             List<ImplementationInfo> infos = GetImplementationsInfos(dependencyType);
 
-
-            if ((infos == null && !dependencyType.IsGenericType) || 
+            if ((infos == null && !dependencyType.IsGenericType) ||
                 (infos == null && dependencyType.IsGenericType && dependencyType.GetGenericTypeDefinition() != typeof(IEnumerable<>)))
+            {
                 throw new Exception("Unregistered dependency");
+            }
 
             if (_recursionStack.Contains(dependencyType))
                 return null;
@@ -38,8 +39,8 @@ namespace DependencyInjectionContainerLibrary
             _recursionStack.Push(dependencyType);
             if (dependencyType.IsGenericType && dependencyType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
             {
-                Type genericDependencyType = dependencyType.GetGenericArguments()[0];
-                infos = GetImplementationsInfos(genericDependencyType);
+                Type genericArgumentType = dependencyType.GetGenericArguments()[0];
+                infos = GetImplementationsInfos(genericArgumentType);
 
                 if (infos == null)
                 {
@@ -52,7 +53,7 @@ namespace DependencyInjectionContainerLibrary
                     implementations.Add(GetImplementation(info, dependencyType));
                 }
 
-                return ConvertToIEnumerable(implementations, genericDependencyType);
+                return ConvertToRequiredType(implementations, genericArgumentType);
             }
 
             object obj = GetImplementation(infos[0], dependencyType);
@@ -141,23 +142,22 @@ namespace DependencyInjectionContainerLibrary
             return implInstance;
         }
 
-        private object ConvertToIEnumerable(List<object> implementations, Type t)
+        private object ConvertToRequiredType(List<object> implementations, Type requiredType)
         {
-            Type enumerableType = typeof(Enumerable);
-            MethodInfo castMethod = enumerableType.GetMethod(nameof(Enumerable.Cast))?.MakeGenericMethod(t);
-            MethodInfo toListMethod = enumerableType.GetMethod(nameof(Enumerable.ToList))?.MakeGenericMethod(t);
+            MethodInfo castMethod = typeof(Enumerable).GetMethod(nameof(Enumerable.Cast))?.MakeGenericMethod(requiredType);
+            MethodInfo toListMethod = typeof(Enumerable).GetMethod(nameof(Enumerable.ToList))?.MakeGenericMethod(requiredType);
 
             IEnumerable<object> itemsToCast = implementations;
             var castedItems = castMethod?.Invoke(null, new[] { itemsToCast });
             return toListMethod?.Invoke(null, new[] { castedItems });
         }
 
-        private bool IsDependency(Type t)
+        private bool IsDependency(Type type)
         {
-            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                return IsDependency(t.GetGenericArguments()[0]);
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                return IsDependency(type.GetGenericArguments()[0]);
 
-            return _configuration.RegisteredDependencies.ContainsKey(t);
+            return _configuration.RegisteredDependencies.ContainsKey(type);
         }
     }
 }

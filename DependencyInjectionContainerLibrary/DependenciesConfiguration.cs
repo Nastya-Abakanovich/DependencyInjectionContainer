@@ -18,8 +18,7 @@ namespace DependencyInjectionContainerLibrary
 
         public void Register(Type interfaceType, Type classType, LifeTime lifeTime = LifeTime.InstancePerDependency)
         {
-            if ( classType.IsAbstract //(!interfaceType.IsInterface && interfaceType != classType) ||
-                || (!interfaceType.IsAssignableFrom(classType)) && !interfaceType.IsGenericTypeDefinition) 
+            if ( classType.IsAbstract || (!interfaceType.IsAssignableFrom(classType) && !interfaceType.IsGenericTypeDefinition)) 
             {
                 throw new Exception("Dependency registration exception");
             }
