@@ -1,12 +1,14 @@
-﻿namespace DependencyInjectionContainerLibrary
+﻿using System.Collections.Concurrent;
+
+namespace DependencyInjectionContainerLibrary
 {
     public class DependenciesConfiguration
     {
-        public readonly Dictionary<Type, List<ImplementationInfo>> RegisteredDependencies;
+        public readonly ConcurrentDictionary<Type, List<ImplementationInfo>> RegisteredDependencies;
 
         public DependenciesConfiguration()
         {
-            RegisteredDependencies = new Dictionary<Type, List<ImplementationInfo>>();
+            RegisteredDependencies = new ConcurrentDictionary<Type, List<ImplementationInfo>>();
         }
 
         public void Register<TDependency, TImplementation>(LifeTime lifeTime = LifeTime.InstancePerDependency)
@@ -16,8 +18,8 @@
 
         public void Register(Type interfaceType, Type classType, LifeTime lifeTime = LifeTime.InstancePerDependency)
         {
-            if ((!interfaceType.IsInterface && interfaceType != classType) || classType.IsAbstract
-                || !interfaceType.IsAssignableFrom(classType) && !interfaceType.IsGenericTypeDefinition)
+            if ( classType.IsAbstract //(!interfaceType.IsInterface && interfaceType != classType) ||
+                || (!interfaceType.IsAssignableFrom(classType)) && !interfaceType.IsGenericTypeDefinition) 
             {
                 throw new Exception("Dependency registration exception");
             }
@@ -25,7 +27,7 @@
             if (!RegisteredDependencies.ContainsKey(interfaceType))
             {
                 List<ImplementationInfo> impl = new List<ImplementationInfo> { new ImplementationInfo(lifeTime, classType) };
-                RegisteredDependencies.Add(interfaceType, impl);
+                RegisteredDependencies.TryAdd(interfaceType, impl);
             }
             else
             {

@@ -27,7 +27,9 @@ namespace DependencyInjectionContainerLibrary
             
             List<ImplementationInfo> infos = GetImplementationsInfos(dependencyType);
 
-            if (infos == null && dependencyType.GetGenericTypeDefinition() != typeof(IEnumerable<>))
+
+            if ((infos == null && !dependencyType.IsGenericType) || 
+                (infos == null && dependencyType.IsGenericType && dependencyType.GetGenericTypeDefinition() != typeof(IEnumerable<>)))
                 throw new Exception("Unregistered dependency");
 
             if (_recursionStack.Contains(dependencyType))
